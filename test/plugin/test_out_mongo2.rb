@@ -139,4 +139,18 @@ class Mongo2OutputTest < ::Test::Unit::TestCase
                 {'a' => 2, d.instance.time_key => time}]
     assert_equal(expected, actual_documents)
   end
+
+  def test_write_at_enable_tag
+    d = create_driver(default_config + %[
+      include_tag_key true
+      include_time_key false
+    ])
+    t = emit_documents(d)
+
+    d.run
+    actual_documents = get_documents
+    expected = [{'a' => 1, d.instance.tag_key => 'test'},
+                {'a' => 2, d.instance.tag_key => 'test'}]
+    assert_equal(expected, actual_documents)
+  end
 end
