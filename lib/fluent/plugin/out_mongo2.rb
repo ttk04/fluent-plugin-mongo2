@@ -106,7 +106,7 @@ module Fluent
     def operate(client, records)
       begin
         result = client[@collection].insert_many(records)
-      rescue => e
+      rescue Mongo::Error::BulkWriteError => e
         puts e
       end
       records
