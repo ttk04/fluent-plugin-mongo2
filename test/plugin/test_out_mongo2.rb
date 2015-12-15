@@ -60,7 +60,7 @@ class Mongo2OutputTest < ::Test::Unit::TestCase
     assert_equal('localhost', d.instance.host)
     assert_equal(port, d.instance.port)
     assert_equal({capped: true, size: 100}, d.instance.collection_options)
-    assert_equal({ssl: false, j: false}, d.instance.client_options)
+    assert_equal({ssl: false, write: {j: false}}, d.instance.client_options)
   end
 
   def test_configure_with_ssl
@@ -69,7 +69,9 @@ class Mongo2OutputTest < ::Test::Unit::TestCase
     ]
     d = create_driver(conf)
     expected = {
-      j: false,
+      write: {
+        j: false,
+      },
       ssl: true,
       ssl_cert: nil,
       ssl_key: nil,
@@ -88,7 +90,9 @@ class Mongo2OutputTest < ::Test::Unit::TestCase
     expected = {
       w: 2,
       ssl: false,
-      j: false,
+      write: {
+        j: false,
+      },
     }
     assert_equal(expected, d.instance.client_options)
   end
@@ -100,7 +104,9 @@ class Mongo2OutputTest < ::Test::Unit::TestCase
 
     expected = {
       ssl: false,
-      j: true,
+      write: {
+        j: true,
+      },
     }
     assert_equal(expected, d.instance.client_options)
   end

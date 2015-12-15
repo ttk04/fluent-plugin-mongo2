@@ -46,7 +46,7 @@ module Fluent
       end
 
       @client_options[:w] = @write_concern unless @write_concern.nil?
-      @client_options[:j] = @journaled
+      @client_options[:write] = {j: @journaled}
       @client_options[:ssl] = @ssl
 
       if @ssl
@@ -105,7 +105,7 @@ module Fluent
 
     def operate(client, records)
       begin
-        result = client[@collection].insert_many(records)
+        result = client[@collection, @collection_options].insert_many(records)
       rescue Mongo::Error::BulkWriteError => e
         puts e
       end
