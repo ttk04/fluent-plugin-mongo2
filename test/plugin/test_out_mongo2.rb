@@ -50,12 +50,17 @@ class Mongo2OutputTest < ::Test::Unit::TestCase
       type mongo
       database fluent_test
       collection test_collection
+
+      capped
+      capped_size 100
     ])
 
     assert_equal('fluent_test', d.instance.database)
     assert_equal('test_collection', d.instance.collection)
     assert_equal('localhost', d.instance.host)
     assert_equal(port, d.instance.port)
+    assert_equal({capped: true, size: 100, ssl: false, j: false},
+                 d.instance.client_options)
   end
 
   def test_configure_with_ssl

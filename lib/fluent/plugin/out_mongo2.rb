@@ -38,6 +38,13 @@ module Fluent
     def configure(conf)
       super
 
+      if conf.has_key?('capped')
+        raise ConfigError, "'capped_size' parameter is required on <store> of Mongo output" unless conf.has_key?('capped_size')
+        @client_options[:capped] = true
+        @client_options[:size] = Config.size_value(conf['capped_size'])
+        @client_options[:max] = Config.size_value(conf['capped_max']) if conf.has_key?('capped_max')
+      end
+
       @client_options[:w] = @write_concern unless @write_concern.nil?
       @client_options[:j] = @journaled
       @client_options[:ssl] = @ssl
