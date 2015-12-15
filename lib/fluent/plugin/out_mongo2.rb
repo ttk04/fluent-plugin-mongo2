@@ -12,6 +12,8 @@ module Fluent
     config_param :collection, :string, default: 'untagged'
     config_param :host, :string, default: 'localhost'
     config_param :port, :integer, default: 27017
+    config_param :write_concern, :integer, default: nil
+    config_param :journaled, :bool, default: false
 
     # SSL connection
     config_param :ssl, :bool, default: false
@@ -36,6 +38,8 @@ module Fluent
     def configure(conf)
       super
 
+      @client_options[:w] = @write_concern unless @write_concern.nil?
+      @client_options[:j] = @journaled
       @client_options[:ssl] = @ssl
 
       if @ssl

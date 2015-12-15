@@ -65,12 +65,40 @@ class Mongo2OutputTest < ::Test::Unit::TestCase
     d = create_driver(conf)
     expected = {
       capped: false,
+      j: false,
       ssl: true,
       ssl_cert: nil,
       ssl_key: nil,
       ssl_key_pass_phrase: nil,
       ssl_verify: false,
       ssl_ca_cert: nil,
+    }
+    assert_equal(expected, d.instance.client_options)
+  end
+
+  def test_configure_with_write_concern
+    d = create_driver(default_config + %[
+      write_concern 2
+    ])
+
+    expected = {
+      capped: false,
+      w: 2,
+      ssl: false,
+      j: false,
+    }
+    assert_equal(expected, d.instance.client_options)
+  end
+
+  def test_configure_with_journaled
+    d = create_driver(default_config + %[
+      journaled true
+    ])
+
+    expected = {
+      capped: false,
+      ssl: false,
+      j: true,
     }
     assert_equal(expected, d.instance.client_options)
   end
