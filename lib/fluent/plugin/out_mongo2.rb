@@ -13,15 +13,38 @@ module Fluent
     config_param :host, :string, default: 'localhost'
     config_param :port, :integer, default: 27017
 
+    # SSL connection
+    config_param :ssl, :bool, default: false
+    config_param :ssl_cert, :string, default: nil
+    config_param :ssl_key, :string, default: nil
+    config_param :ssl_key_pass_phrase, :string, default: nil, secret: true
+    config_param :ssl_verify, :bool, default: false
+    config_param :ssl_ca_cert, :string, default: nil
+
+    attr_reader :client_options
+
     def initialize
       super
 
       require 'mongo'
       require 'msgpack'
+
+      @client_options = {}
+      @client_options = {capped: false}
     end
 
     def configure(conf)
       super
+
+      @client_options[:ssl] = @ssl
+
+      if @ssl
+        @client_options[:ssl_cert] = @ssl_cert
+        @client_options[:ssl_key] = @ssl_key
+        @client_options[:ssl_key_pass_phrase] = @ssl_key_pass_phrase
+        @client_options[:ssl_verify] = @ssl_verify
+        @client_options[:ssl_ca_cert] = @ssl_ca_cert
+      end
 
       # MongoDB uses BSON's Date for time.
       def @timef.format_nocache(time)
@@ -54,11 +77,10 @@ module Fluent
     private
 
     def client
-      options = {}
-      options[:database] = @database
-      options[:user] = @user if @user
-      options[:password] = @password if @password
-      Mongo::Client.new(["#{@host}:#{@port}"], options)
+      @client_options[:database] = @database
+      @client_options[:user] = @user if @user
+      @client_options[:password] = @password if @password
+      Mongo::Client.new(["#{@host}:#{@port}"], @client_options)
     end
 
     def collect_records(chunk)

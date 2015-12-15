@@ -58,6 +58,23 @@ class Mongo2OutputTest < ::Test::Unit::TestCase
     assert_equal(port, d.instance.port)
   end
 
+  def test_configure_with_ssl
+    conf = default_config + %[
+      ssl true
+    ]
+    d = create_driver(conf)
+    expected = {
+      capped: false,
+      ssl: true,
+      ssl_cert: nil,
+      ssl_key: nil,
+      ssl_key_pass_phrase: nil,
+      ssl_verify: false,
+      ssl_ca_cert: nil,
+    }
+    assert_equal(expected, d.instance.client_options)
+  end
+
   def get_documents
     @client[collection_name].find.to_a.map {|e| e.delete('_id'); e}
   end
