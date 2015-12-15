@@ -23,7 +23,7 @@ module Fluent
     config_param :ssl_verify, :bool, default: false
     config_param :ssl_ca_cert, :string, default: nil
 
-    attr_reader :client_options
+    attr_reader :client_options, :collection_options
 
     def initialize
       super
@@ -32,7 +32,7 @@ module Fluent
       require 'msgpack'
 
       @client_options = {}
-      @client_options = {capped: false}
+      @collection_options = {capped: false}
     end
 
     def configure(conf)
@@ -40,9 +40,9 @@ module Fluent
 
       if conf.has_key?('capped')
         raise ConfigError, "'capped_size' parameter is required on <store> of Mongo output" unless conf.has_key?('capped_size')
-        @client_options[:capped] = true
-        @client_options[:size] = Config.size_value(conf['capped_size'])
-        @client_options[:max] = Config.size_value(conf['capped_max']) if conf.has_key?('capped_max')
+        @collection_options[:capped] = true
+        @collection_options[:size] = Config.size_value(conf['capped_size'])
+        @collection_options[:max] = Config.size_value(conf['capped_max']) if conf.has_key?('capped_max')
       end
 
       @client_options[:w] = @write_concern unless @write_concern.nil?
