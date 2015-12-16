@@ -15,6 +15,10 @@ module Fluent
     config_param :write_concern, :integer, default: nil
     config_param :journaled, :bool, default: false
 
+    # authenticate
+    config_param :user, :string, default: nil
+    config_param :password, :string, default: nil, secret: true
+
     # SSL connection
     config_param :ssl, :bool, default: false
     config_param :ssl_cert, :string, default: nil
@@ -65,6 +69,7 @@ module Fluent
 
     def start
       @client = client
+      @client = authenticate(@client)
       super
     end
 
@@ -110,6 +115,18 @@ module Fluent
         puts e
       end
       records
+    end
+
+    def authenticate(client)
+      unless @user.nil? || @password.nil?
+        begin
+          client = client.with(@user, @password)
+        rescue Mongo::AuthenticationError => e
+          log.fatal e
+          exit!
+        end
+      end
+      client
     end
   end
 end
