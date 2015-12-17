@@ -161,4 +161,40 @@ class Mongo2OutputTest < ::Test::Unit::TestCase
                 {'a' => 2, d.instance.tag_key => 'test'}]
     assert_equal(expected, actual_documents)
   end
+
+  class MongoAuthenticateTest < self
+    require 'fluent/plugin/mongo_auth'
+    include ::Fluent::MongoAuth
+
+    def setup
+      Fluent::Test.setup
+      setup_mongod
+    end
+
+    def teardown
+      teardown_mongod
+    end
+
+    def setup_mongod
+      options = {}
+      options[:database] = database_name
+      @client = ::Mongo::Client.new(["localhost:#{port}"], options)
+      @client.database.users.create('fluent', password: 'password',
+                                    roles: [Mongo::Auth::Roles::READ_WRITE])
+    end
+
+    def teardown_mongod
+      @client[collection_name].drop
+      @client.database.users.remove('fluent')
+    end
+
+    def test_authenticate
+      d = create_driver(default_config + %[
+        user fluent
+        password password
+      ])
+
+      authenticate(@client)
+    end
+  end
 end
