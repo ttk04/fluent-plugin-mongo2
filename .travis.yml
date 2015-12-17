@@ -1,0 +1,13 @@
+language: ruby
+rvm:
+  - 2.1
+  - 2.2
+
+services:
+  - mongodb
+
+before_install:
+  - gem install bundler
+
+script:
+  - bundle exec rake test
