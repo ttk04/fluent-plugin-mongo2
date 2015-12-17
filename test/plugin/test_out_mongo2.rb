@@ -196,15 +196,6 @@ class Mongo2OutputTest < ::Test::Unit::TestCase
     require 'fluent/plugin/mongo_auth'
     include ::Fluent::MongoAuth
 
-    def setup
-      Fluent::Test.setup
-      setup_mongod
-    end
-
-    def teardown
-      teardown_mongod
-    end
-
     def setup_mongod
       options = {}
       options[:database] = database_name
