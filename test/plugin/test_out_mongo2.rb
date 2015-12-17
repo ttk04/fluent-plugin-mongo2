@@ -162,6 +162,36 @@ class Mongo2OutputTest < ::Test::Unit::TestCase
     assert_equal(expected, actual_documents)
   end
 
+  class WithAuthenticateTest < self
+    def setup_mongod
+      options = {}
+      options[:database] = database_name
+      @client = ::Mongo::Client.new(["localhost:#{port}"], options)
+      @client.database.users.create('fluent', password: 'password',
+                                    roles: [Mongo::Auth::Roles::READ_WRITE])
+    end
+
+    def teardown_mongod
+      @client[collection_name].drop
+      @client.database.users.remove('fluent')
+    end
+
+    def test_write_with_authenticate
+      d = create_driver(default_config + %[
+        user fluent
+        password password
+      ])
+      t = emit_documents(d)
+
+      d.run
+      actual_documents = get_documents
+      time = Time.parse("2011-01-02 13:14:15 UTC")
+      expected = [{'a' => 1, d.instance.time_key => time},
+                  {'a' => 2, d.instance.time_key => time}]
+      assert_equal(expected, actual_documents)
+    end
+  end
+
   class MongoAuthenticateTest < self
     require 'fluent/plugin/mongo_auth'
     include ::Fluent::MongoAuth
