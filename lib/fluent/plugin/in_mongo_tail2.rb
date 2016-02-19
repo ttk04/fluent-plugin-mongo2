@@ -80,7 +80,7 @@ module Fluent
             return if @stop
 
             cursor = @database.find
-            if doc = cursor.next
+            if doc = cursor.each.next
               process_document(doc)
             else
               sleep @wait_time
@@ -104,7 +104,7 @@ module Fluent
     def get_database
       @client = client
       @client = authenticate(@client)
-      @client["#{@database}"]
+      @client["#{@collection}"]
     end
 
     def node_string
