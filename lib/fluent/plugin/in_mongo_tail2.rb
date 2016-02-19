@@ -29,6 +29,7 @@ module Fluent
       require 'mongo'
       require 'bson'
 
+      @client_options = {}
       @connection_options = {}
     end
 
