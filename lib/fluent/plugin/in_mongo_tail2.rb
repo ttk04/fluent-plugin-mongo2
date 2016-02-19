@@ -74,14 +74,17 @@ module Fluent
 
     def run
       loop {
-        cursor = @database.find
+        option = {}
         begin
           loop {
             return if @stop
 
-            cursor = @database.find
-            if doc = cursor.each.next
-              process_document(doc)
+            option['_id'] = {'$gt' => BSON::ObjectId(@last_id)} if @last_id
+            cursor = @collection.find(option)
+            if cursor.count >= 1
+              cursor.each {|doc|
+                process_document(doc)
+              }
             else
               sleep @wait_time
             end
