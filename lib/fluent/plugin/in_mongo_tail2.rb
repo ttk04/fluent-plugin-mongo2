@@ -90,7 +90,7 @@ module Fluent
             end
           }
         rescue
-          # ignore StopIteration Exception
+          # ignore Exceptions
         end
       }
     end
