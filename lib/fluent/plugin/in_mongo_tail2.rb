@@ -55,7 +55,7 @@ module Fluent
     def start
       super
 
-      @database = get_database
+      @collection = get_collection
       @thread = Thread.new(&method(:run))
     end
 
@@ -101,7 +101,7 @@ module Fluent
       Mongo::Client.new(["#{node_string}"], @client_options)
     end
 
-    def get_database
+    def get_collection
       @client = client
       @client = authenticate(@client)
       @client["#{@collection}"]
