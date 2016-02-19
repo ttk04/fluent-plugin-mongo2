@@ -3,6 +3,23 @@ require "helper"
 class MongoTailInputTest < Test::Unit::TestCase
   def setup
     Fluent::Test.setup
+    setup_mongod
+  end
+
+  def teardown
+    teardown_mongod
+  end
+
+  def collection_name
+    'test'
+  end
+
+  def database_name
+    'fluent_test'
+  end
+
+  def port
+    27017
   end
 
   def default_config
@@ -14,6 +31,16 @@ class MongoTailInputTest < Test::Unit::TestCase
       time_key time
       id_store_file /tmp/fluent_mongo_last_id
     ]
+  end
+
+  def setup_mongod
+    options = {}
+    options[:database] = database_name
+    @client = ::Mongo::Client.new(["localhost:#{port}"], options)
+  end
+
+  def teardown_mongod
+    @client[collection_name].drop
   end
 
   def create_driver(conf=default_config)
@@ -29,5 +56,32 @@ class MongoTailInputTest < Test::Unit::TestCase
     assert_equal('tag', d.instance.tag_key)
     assert_equal('time', d.instance.time_key)
     assert_equal('/tmp/fluent_mongo_last_id', d.instance.id_store_file)
+  end
+
+  class MongoAuthenticateTest < self
+    require 'fluent/plugin/mongo_auth'
+    include ::Fluent::MongoAuth
+
+    def setup_mongod
+      options = {}
+      options[:database] = database_name
+      @client = ::Mongo::Client.new(["localhost:#{port}"], options)
+      @client.database.users.create('fluent', password: 'password',
+                                    roles: [Mongo::Auth::Roles::READ_WRITE])
+    end
+
+    def teardown_mongod
+      @client[collection_name].drop
+      @client.database.users.remove('fluent')
+    end
+
+    def test_authenticate
+      d = create_driver(default_config + %[
+        user fluent
+        password password
+      ])
+
+      authenticate(@client)
+    end
   end
 end
