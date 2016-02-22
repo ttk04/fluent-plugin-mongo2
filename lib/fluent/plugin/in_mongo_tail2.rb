@@ -19,10 +19,10 @@ module Fluent
     config_param :time_format, :string, default: nil
 
     # To store last ObjectID
-    config_param :id_store_file, :string, :default => nil
+    config_param :id_store_file, :string, default: nil
 
     # SSL connection
-    config_param :ssl, :bool, :default => false
+    config_param :ssl, :bool, default: false
 
     def initialize
       super
