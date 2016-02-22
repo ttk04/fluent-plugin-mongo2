@@ -5,6 +5,8 @@ module Fluent
     require 'fluent/plugin/mongo_auth'
     include MongoAuthParams
     include MongoAuth
+    require 'fluent/plugin/logger_support'
+    include LoggerSupport
 
     include SetTagKeyMixin
     config_set_default :include_tag_key, false
@@ -65,6 +67,8 @@ module Fluent
       def @timef.format_nocache(time)
         time
       end
+
+      configure_logger(@mongo_log_level)
     end
 
     def start

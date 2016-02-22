@@ -5,6 +5,8 @@ module Fluent
     require 'fluent/plugin/mongo_auth'
     include MongoAuthParams
     include MongoAuth
+    require 'fluent/plugin/logger_support'
+    include LoggerSupport
 
     config_param :database, :string, default: nil
     config_param :collection, :string
@@ -50,6 +52,8 @@ module Fluent
 
       @last_id = @id_store_file ? get_last_id : nil
       @connection_options[:ssl] = @ssl
+
+      configure_logger(@mongo_log_level)
     end
 
     def start

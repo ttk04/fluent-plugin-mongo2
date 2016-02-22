@@ -111,6 +111,15 @@ class Mongo2OutputTest < ::Test::Unit::TestCase
     assert_equal(expected, d.instance.client_options)
   end
 
+  def test_configure_with_logger_conf
+    d = create_driver(default_config + %[
+      mongo_log_level fatal
+    ])
+
+    expected = "fatal"
+    assert_equal(expected, d.instance.mongo_log_level)
+  end
+
   def get_documents
     @client[collection_name].find.to_a.map {|e| e.delete('_id'); e}
   end

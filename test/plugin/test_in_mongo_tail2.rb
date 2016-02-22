@@ -58,6 +58,15 @@ class MongoTailInputTest < Test::Unit::TestCase
     assert_equal('/tmp/fluent_mongo_last_id', d.instance.id_store_file)
   end
 
+  def test_configure_with_logger_conf
+    d = create_driver(default_config + %[
+      mongo_log_level error
+    ])
+
+    expected = "error"
+    assert_equal(expected, d.instance.mongo_log_level)
+  end
+
   class MongoAuthenticateTest < self
     require 'fluent/plugin/mongo_auth'
     include ::Fluent::MongoAuth
