@@ -28,7 +28,7 @@ class MongoReplset2OutputTest < ::Test::Unit::TestCase
       database #{database_name}
       collection #{collection_name}
       include_time_key true
-      replica_set database_name
+      replica_set localhost
     ]
   end
 
