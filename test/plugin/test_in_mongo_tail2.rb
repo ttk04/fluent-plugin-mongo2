@@ -90,7 +90,7 @@ class MongoTailInputTest < Test::Unit::TestCase
         password password
       ])
 
-      authenticate(@client)
+      assert authenticate(@client)
     end
   end
 end
