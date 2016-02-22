@@ -63,4 +63,13 @@ class MongoReplset2OutputTest < ::Test::Unit::TestCase
     assert_equal({replica_set: 'test', :ssl=>false, :write=>{:j=>false}},
                  d.instance.client_options)
   end
+
+  def test_configure_with_logger_conf
+    d = create_driver(default_config + %[
+      mongo_log_level fatal
+    ])
+
+    expected = "fatal"
+    assert_equal(expected, d.instance.mongo_log_level)
+  end
 end
