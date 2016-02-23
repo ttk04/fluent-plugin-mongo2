@@ -82,6 +82,8 @@ class MongoReplset2OutputTest < ::Test::Unit::TestCase
     end
 
     def teardown
+      omit("Replica set setup is too hard in CI.") if ENV['CI']
+
       teardown_mongod
     end
 
