@@ -73,4 +73,53 @@ class MongoReplset2OutputTest < ::Test::Unit::TestCase
     expected = "fatal"
     assert_equal(expected, d.instance.mongo_log_level)
   end
+
+  class ReplisetWriteTest < self
+    def setup
+      omit("Replica set setup is too hard in CI.") if ENV['CI']
+
+      setup_mongod
+    end
+
+    def teardown
+      teardown_mongod
+    end
+
+    def get_documents
+      @client[collection_name].find.to_a.map {|e| e.delete('_id'); e}
+    end
+
+    def emit_documents(d)
+      time = Time.parse("2011-01-02 13:14:15 UTC").to_i
+      d.emit({'a' => 1}, time)
+      d.emit({'a' => 2}, time)
+      time
+    end
+
+    def test_format
+      d = create_driver
+
+      time = Time.parse("2011-01-02 13:14:15 UTC").to_i
+      d.emit({'a' => 1}, time)
+      d.emit({'a' => 2}, time)
+      d.expect_format([time, {'a' => 1, d.instance.time_key => time}].to_msgpack)
+      d.expect_format([time, {'a' => 2, d.instance.time_key => time}].to_msgpack)
+      d.run
+
+      documents = get_documents
+      assert_equal(2, documents.size)
+    end
+
+    def test_write
+      d = create_driver
+      t = emit_documents(d)
+
+      d.run
+      actual_documents = get_documents
+      time = Time.parse("2011-01-02 13:14:15 UTC")
+      expected = [{'a' => 1, d.instance.time_key => time},
+                  {'a' => 2, d.instance.time_key => time}]
+      assert_equal(expected, actual_documents)
+    end
+  end
 end
