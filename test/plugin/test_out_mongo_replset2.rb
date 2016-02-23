@@ -3,11 +3,9 @@ require "helper"
 class MongoReplset2OutputTest < ::Test::Unit::TestCase
   def setup
     Fluent::Test.setup
-    setup_mongod
   end
 
   def teardown
-    teardown_mongod
   end
 
   def collection_name
@@ -31,16 +29,6 @@ class MongoReplset2OutputTest < ::Test::Unit::TestCase
       include_time_key true
       replica_set rs0
     ]
-  end
-
-  def setup_mongod
-    options = {}
-    options[:database] = database_name
-    @client = ::Mongo::Client.new(["localhost:#{port}"], options)
-  end
-
-  def teardown_mongod
-    @client[collection_name].drop
   end
 
   def create_driver(conf=default_config, tag='test')
@@ -85,6 +73,16 @@ class MongoReplset2OutputTest < ::Test::Unit::TestCase
       omit("Replica set setup is too hard in CI.") if ENV['CI']
 
       teardown_mongod
+    end
+
+    def setup_mongod
+      options = {}
+      options[:database] = database_name
+      @client = ::Mongo::Client.new(["localhost:#{port}"], options)
+    end
+
+    def teardown_mongod
+      @client[collection_name].drop
     end
 
     def get_documents
