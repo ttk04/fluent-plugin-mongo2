@@ -21,6 +21,8 @@ module Fluent
     config_param :exclude_broken_fields, :string, default: nil
     config_param :write_concern, :integer, default: nil
     config_param :journaled, :bool, default: false
+    config_param :replace_dot_in_key_with, :string, default: nil
+    config_param :replace_dollar_in_key_with, :string, default: nil
 
     # SSL connection
     config_param :ssl, :bool, default: false
@@ -120,6 +122,17 @@ module Fluent
 
     def operate(client, records)
       begin
+        if @replace_dot_in_key_with
+          records.map! do |r|
+            replace_key_of_hash(r, ".", @replace_dot_in_key_with)
+          end
+        end
+        if @replace_dollar_in_key_with
+          records.map! do |r|
+            replace_key_of_hash(r, /^\$/, @replace_dollar_in_key_with)
+          end
+        end
+
         result = client[@collection, @collection_options].insert_many(records)
       rescue Mongo::Error::BulkWriteError => e
         puts e
@@ -143,6 +156,28 @@ module Fluent
         new_record
       }
       client[@collection, @collection_options].insert_many(converted_records)
+    end
+
+    # Copied from https://github.com/fluent/fluent-plugin-mongo/blob/82106b8d8551b29d503bca0ff5f9927eca0de0e0/lib/fluent/plugin/out_mongo.rb#L274
+    def replace_key_of_hash(hash_or_array, pattern, replacement)
+      case hash_or_array
+      when Array
+        hash_or_array.map do |elm|
+          replace_key_of_hash(elm, pattern, replacement)
+        end
+      when Hash
+        result = Hash.new
+        hash_or_array.each_pair do |k, v|
+          k = k.gsub(pattern, replacement)
+
+          if v.is_a?(Hash) || v.is_a?(Array)
+            result[k] = replace_key_of_hash(v, pattern, replacement)
+          else
+            result[k] = v
+          end
+        end
+        result
+      end
     end
   end
 end

@@ -194,6 +194,32 @@ class Mongo2OutputTest < ::Test::Unit::TestCase
     assert_equal(0, documents.select { |e| e.has_key?('b') }.size)
   end
 
+  def test_write_with_invalid_recoreds_with_keys_containing_dot_and_dollar
+    d = create_driver(default_config + %[
+      replace_dot_in_key_with _dot_
+      replace_dollar_in_key_with _dollar_
+    ])
+
+    time = Time.parse("2016-02-01 13:14:15 UTC").to_i
+    d.emit({
+      "foo.bar1" => {
+        "$foo$bar" => "baz"
+      },
+      "foo.bar2" => [
+        {
+          "$foo$bar" => "baz"
+        }
+      ],
+    }, time)
+    d.run
+
+    documents = get_documents
+    assert_equal(1, documents.size)
+    assert_equal("baz", documents[0]["foo_dot_bar1"]["_dollar_foo$bar"])
+    assert_equal("baz", documents[0]["foo_dot_bar2"][0]["_dollar_foo$bar"])
+    assert_equal(0, documents.select { |e| e.has_key?(d.instance.broken_bulk_inserted_sequence_key)}.size)
+  end
+
   class WithAuthenticateTest < self
     def setup_mongod
       options = {}
