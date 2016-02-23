@@ -18,6 +18,7 @@ module Fluent
     config_param :collection, :string, default: 'untagged'
     config_param :host, :string, default: 'localhost'
     config_param :port, :integer, default: 27017
+    config_param :exclude_broken_fields, :string, default: nil
     config_param :write_concern, :integer, default: nil
     config_param :journaled, :bool, default: false
 
@@ -29,7 +30,9 @@ module Fluent
     config_param :ssl_verify, :bool, default: false
     config_param :ssl_ca_cert, :string, default: nil
 
-    attr_reader :client_options, :collection_options
+    BROKEN_BULK_INSERTED_SEQUENCE_KEY = '__broken_bulk_inserted_sequence'
+
+    attr_reader :client_options, :collection_options, :broken_bulk_inserted_sequence_key
 
     def initialize
       super
@@ -39,10 +42,13 @@ module Fluent
 
       @client_options = {}
       @collection_options = {capped: false}
+      @broken_bulk_inserted_sequence_key = BROKEN_BULK_INSERTED_SEQUENCE_KEY
     end
 
     def configure(conf)
       super
+
+      @exclude_broken_fields = @exclude_broken_fields.split(',') if @exclude_broken_fields
 
       if conf.has_key?('capped')
         raise ConfigError, "'capped_size' parameter is required on <store> of Mongo output" unless conf.has_key?('capped_size')
@@ -117,8 +123,26 @@ module Fluent
         result = client[@collection, @collection_options].insert_many(records)
       rescue Mongo::Error::BulkWriteError => e
         puts e
+      rescue ArgumentError => e
+        operate_invalid_bulk_inserted_records(client, records)
       end
       records
+    end
+
+    def operate_invalid_bulk_inserted_records(client, records)
+      converted_records = records.map { |record|
+        new_record = {}
+        new_record[@tag_key] = record.delete(@tag_key) if @include_tag_key
+        new_record[@time_key] = record.delete(@time_key)
+        if @exclude_broken_fields
+          @exclude_broken_fields.each { |key|
+            new_record[key] = record.delete(key)
+          }
+        end
+        new_record[@broken_bulk_inserted_sequence_key] = BSON::Binary.new(Marshal.dump(record))
+        new_record
+      }
+      client[@collection, @collection_options].insert_many(converted_records)
     end
   end
 end

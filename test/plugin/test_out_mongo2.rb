@@ -1,3 +1,4 @@
+# coding: utf-8
 require "helper"
 
 class Mongo2OutputTest < ::Test::Unit::TestCase
@@ -169,6 +170,28 @@ class Mongo2OutputTest < ::Test::Unit::TestCase
     expected = [{'a' => 1, d.instance.tag_key => 'test'},
                 {'a' => 2, d.instance.tag_key => 'test'}]
     assert_equal(expected, actual_documents)
+  end
+
+  def emit_invalid_documents(d)
+    time = Time.parse("2011-01-02 13:14:15 UTC").to_i
+    d.emit({'a' => 3, 'b' => "c", '$last' => '石動'}, time)
+    d.emit({'a' => 4, 'b' => "d", 'first' => '菖蒲'.encode('EUC-JP').force_encoding('UTF-8')}, time)
+    time
+  end
+
+  def test_write_with_invalid_recoreds_with_exclude_one_broken_fields
+    d = create_driver(default_config + %[
+      exclude_broken_fields a
+    ])
+    t = emit_documents(d)
+    t = emit_invalid_documents(d)
+
+    d.run
+    documents = get_documents
+    assert_equal(4, documents.size)
+    assert_equal(4, documents.select { |e| e.has_key?(d.instance.broken_bulk_inserted_sequence_key) }.size)
+    assert_equal([1, 2, 3, 4], documents.select { |e| e.has_key?('a') }.map { |e| e['a'] }.sort)
+    assert_equal(0, documents.select { |e| e.has_key?('b') }.size)
   end
 
   class WithAuthenticateTest < self
