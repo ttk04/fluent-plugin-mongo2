@@ -179,7 +179,7 @@ class Mongo2OutputTest < ::Test::Unit::TestCase
     time
   end
 
-  def test_write_with_invalid_recoreds_with_exclude_one_broken_fields
+  def test_write_with_invalid_recoreds_with_exclude_one_broken_fields_mongodb_3_2_or_later
     omit("Use MongoDB 3.2 or later.") unless ENV['MONGODB'].to_f >= 3.2
 
     d = create_driver(default_config + %[
