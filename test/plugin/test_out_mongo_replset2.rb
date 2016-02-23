@@ -19,19 +19,19 @@ class MongoReplset2OutputTest < ::Test::Unit::TestCase
   end
 
   def port
-    27017
+    27018
   end
 
   def default_config
     %[
       type mongo
+      port 27018
       database #{database_name}
       collection #{collection_name}
       include_time_key true
-      replica_set localhost
+      replica_set rs0
     ]
   end
-
 
   def setup_mongod
     options = {}
@@ -50,17 +50,18 @@ class MongoReplset2OutputTest < ::Test::Unit::TestCase
   def test_configure
     d = create_driver(%[
       type mongo
+      port 27018
       database fluent_test
       collection test_collection
 
-      replica_set test
+      replica_set rs0
     ])
 
     assert_equal('fluent_test', d.instance.database)
     assert_equal('test_collection', d.instance.collection)
     assert_equal('localhost', d.instance.host)
     assert_equal(port, d.instance.port)
-    assert_equal({replica_set: 'test', :ssl=>false, :write=>{:j=>false}},
+    assert_equal({replica_set: 'rs0', :ssl=>false, :write=>{:j=>false}},
                  d.instance.client_options)
   end
 
