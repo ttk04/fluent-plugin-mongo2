@@ -135,7 +135,7 @@ module Fluent
 
         client[@collection, @collection_options].insert_many(records)
       rescue Mongo::Error::BulkWriteError => e
-        puts e
+        log.warn e
       rescue ArgumentError => e
         operate_invalid_bulk_inserted_records(client, records)
       end
