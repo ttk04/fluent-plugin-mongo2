@@ -133,7 +133,7 @@ module Fluent
           end
         end
 
-        result = client[@collection, @collection_options].insert_many(records)
+        client[@collection, @collection_options].insert_many(records)
       rescue Mongo::Error::BulkWriteError => e
         puts e
       rescue ArgumentError => e
