@@ -202,7 +202,8 @@ class Mongo2OutputTest < ::Test::Unit::TestCase
       replace_dollar_in_key_with _dollar_
     ])
 
-    time = Time.parse("2016-02-01 13:14:15 UTC").to_i
+    original_time = "2016-02-01 13:14:15 UTC"
+    time = Time.parse(original_time).to_i
     d.emit({
       "foo.bar1" => {
         "$foo$bar" => "baz"
@@ -216,9 +217,17 @@ class Mongo2OutputTest < ::Test::Unit::TestCase
     d.run
 
     documents = get_documents
+    expected = {"foo_dot_bar1" => {
+                  "_dollar_foo$bar"=>"baz"
+                },
+                "foo_dot_bar2" => [
+                  {
+                    "_dollar_foo$bar"=>"baz"
+                  },
+                ], "time" => Time.parse(original_time)
+               }
     assert_equal(1, documents.size)
-    assert_equal("baz", documents[0]["foo_dot_bar1"]["_dollar_foo$bar"])
-    assert_equal("baz", documents[0]["foo_dot_bar2"][0]["_dollar_foo$bar"])
+    assert_equal(expected, documents[0])
     assert_equal(0, documents.select { |e| e.has_key?(d.instance.broken_bulk_inserted_sequence_key)}.size)
   end
 
