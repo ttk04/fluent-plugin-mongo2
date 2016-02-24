@@ -179,23 +179,6 @@ class Mongo2OutputTest < ::Test::Unit::TestCase
     time
   end
 
-  def test_write_with_invalid_recoreds_with_exclude_one_broken_fields_mongodb_3_2_or_later
-    omit("Use MongoDB 3.2 or later.") unless ENV['MONGODB'].to_f >= 3.2
-
-    d = create_driver(default_config + %[
-      exclude_broken_fields a
-    ])
-    t = emit_documents(d)
-    t = emit_invalid_documents(d)
-
-    d.run
-    documents = get_documents
-    assert_equal(4, documents.size)
-    assert_equal(4, documents.select { |e| e.has_key?(d.instance.broken_bulk_inserted_sequence_key) }.size)
-    assert_equal([1, 2, 3, 4], documents.select { |e| e.has_key?('a') }.map { |e| e['a'] }.sort)
-    assert_equal(0, documents.select { |e| e.has_key?('b') }.size)
-  end
-
   def test_write_with_invalid_recoreds_with_keys_containing_dot_and_dollar
     d = create_driver(default_config + %[
       replace_dot_in_key_with _dot_
@@ -228,7 +211,6 @@ class Mongo2OutputTest < ::Test::Unit::TestCase
                }
     assert_equal(1, documents.size)
     assert_equal(expected, documents[0])
-    assert_equal(0, documents.select { |e| e.has_key?(d.instance.broken_bulk_inserted_sequence_key)}.size)
   end
 
   class WithAuthenticateTest < self
