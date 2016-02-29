@@ -131,8 +131,8 @@ class Mongo2OutputTest < ::Test::Unit::TestCase
     assert_equal(expected, d.instance.mongo_log_level)
   end
 
-  def get_documents
-    @client[collection_name].find.to_a.map {|e| e.delete('_id'); e}
+  def get_documents(collection=collection_name)
+    @client[collection].find.to_a.map {|e| e.delete('_id'); e}
   end
 
   def emit_documents(d)
@@ -179,6 +179,21 @@ class Mongo2OutputTest < ::Test::Unit::TestCase
     actual_documents = get_documents
     expected = [{'a' => 1, d.instance.tag_key => 'test'},
                 {'a' => 2, d.instance.tag_key => 'test'}]
+    assert_equal(expected, actual_documents)
+  end
+
+  def test_write_with_tag_mapped
+    d = create_driver(default_config + %[
+      tag_mapped true
+      remove_tag_prefix raw.
+    ], "raw.testee")
+    t = emit_documents(d)
+
+    d.run
+    actual_documents = get_documents('testee')
+    time = Time.parse("2011-01-02 13:14:15 UTC")
+    expected = [{'a' => 1, d.instance.time_key => time},
+                {'a' => 2, d.instance.time_key => time}]
     assert_equal(expected, actual_documents)
   end
 
