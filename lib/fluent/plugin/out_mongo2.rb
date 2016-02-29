@@ -23,6 +23,10 @@ module Fluent
     config_param :replace_dot_in_key_with, :string, default: nil
     config_param :replace_dollar_in_key_with, :string, default: nil
 
+    # tag mapping mode
+    config_param :tag_mapped, :bool, default: false
+    config_param :remove_tag_prefix, :string, default: nil
+
     # SSL connection
     config_param :ssl, :bool, default: false
     config_param :ssl_cert, :string, default: nil
@@ -46,11 +50,23 @@ module Fluent
     def configure(conf)
       super
 
+      if conf.has_key?('tag_mapped')
+        @tag_mapped = true
+        @disable_collection_check = true if @disable_collection_check.nil?
+      else
+        @disable_collection_check = false if @disable_collection_check.nil?
+      end
+      raise ConfigError, "normal mode requires collection parameter" if !@tag_mapped and !conf.has_key?('collection')
+
       if conf.has_key?('capped')
         raise ConfigError, "'capped_size' parameter is required on <store> of Mongo output" unless conf.has_key?('capped_size')
         @collection_options[:capped] = true
         @collection_options[:size] = Config.size_value(conf['capped_size'])
         @collection_options[:max] = Config.size_value(conf['capped_max']) if conf.has_key?('capped_max')
+      end
+
+      if remove_tag_prefix = conf['remove_tag_prefix']
+        @remove_tag_prefix = Regexp.new('^' + Regexp.escape(remove_tag_prefix))
       end
 
       @client_options[:w] = @write_concern unless @write_concern.nil?
@@ -71,6 +87,8 @@ module Fluent
       end
 
       configure_logger(@mongo_log_level)
+
+      $log.debug "Setup mongo configuration: mode = #{@tag_mapped ? 'tag mapped' : 'normal'}"
     end
 
     def start
@@ -85,7 +103,11 @@ module Fluent
     end
 
     def emit(tag, es, chain)
-      super(tag, es, chain)
+      if @tag_mapped
+        super(tag, es, chain, tag)
+      else
+        super(tag, es, chain)
+      end
     end
 
     def format(tag, time, record)
@@ -93,7 +115,8 @@ module Fluent
     end
 
     def write(chunk)
-      operate(@client, collect_records(chunk))
+      collection_name = @tag_mapped ? chunk.key : @collection
+      operate(format_collection_name(collection_name), collect_records(chunk))
     end
 
     private
@@ -114,7 +137,17 @@ module Fluent
       records
     end
 
-    def operate(client, records)
+    FORMAT_COLLECTION_NAME_RE = /(^\.+)|(\.+$)/
+
+    def format_collection_name(collection_name)
+      formatted = collection_name
+      formatted = formatted.gsub(@remove_tag_prefix, '') if @remove_tag_prefix
+      formatted = formatted.gsub(FORMAT_COLLECTION_NAME_RE, '')
+      formatted = @collection if formatted.size == 0 # set default for nil tag
+      formatted
+    end
+
+    def operate(collection, records)
       begin
         if @replace_dot_in_key_with
           records.map! do |r|
@@ -127,7 +160,7 @@ module Fluent
           end
         end
 
-        client[@collection, @collection_options].insert_many(records)
+        @client[collection, @collection_options].insert_many(records)
       rescue Mongo::Error::BulkWriteError => e
         log.warn e
       rescue ArgumentError => e

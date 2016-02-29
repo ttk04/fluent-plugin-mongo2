@@ -83,6 +83,16 @@ class Mongo2OutputTest < ::Test::Unit::TestCase
     assert_equal(expected, d.instance.client_options)
   end
 
+  def test_configure_with_tag_mapped
+    conf = default_config + %[
+      tag_mapped true
+      remove_tag_prefix raw.
+    ]
+    d = create_driver(conf)
+    assert_true(d.instance.tag_mapped)
+    assert_equal(/^raw\./, d.instance.remove_tag_prefix)
+  end
+
   def test_configure_with_write_concern
     d = create_driver(default_config + %[
       write_concern 2
