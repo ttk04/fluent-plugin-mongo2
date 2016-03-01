@@ -52,9 +52,6 @@ module Fluent
 
       if conf.has_key?('tag_mapped')
         @tag_mapped = true
-        @disable_collection_check = true if @disable_collection_check.nil?
-      else
-        @disable_collection_check = false if @disable_collection_check.nil?
       end
       raise ConfigError, "normal mode requires collection parameter" if !@tag_mapped and !conf.has_key?('collection')
 
