@@ -14,17 +14,27 @@ module Fluent
     include SetTimeKeyMixin
     config_set_default :include_time_key, true
 
+    desc "MongoDB database"
     config_param :database, :string
+    desc "MongoDB collection"
     config_param :collection, :string, default: 'untagged'
+    desc "MongoDB host"
     config_param :host, :string, default: 'localhost'
+    desc "MongoDB port"
     config_param :port, :integer, default: 27017
+    desc "MongoDB write_concern"
     config_param :write_concern, :integer, default: nil
+    desc "MongoDB journaled"
     config_param :journaled, :bool, default: false
+    desc "Replace dot with specified string"
     config_param :replace_dot_in_key_with, :string, default: nil
+    desc "Replace dollar with specified string"
     config_param :replace_dollar_in_key_with, :string, default: nil
 
     # tag mapping mode
+    desc "Use tag_mapped mode"
     config_param :tag_mapped, :bool, default: false
+    desc "Remove tag prefix"
     config_param :remove_tag_prefix, :string, default: nil
 
     # SSL connection
