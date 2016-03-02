@@ -2,7 +2,7 @@ module Fluent
   module LoggerSupport
     def self.included(klass)
       klass.instance_eval {
-        # MongoDB log level
+        desc "MongoDB log level"
         config_param :mongo_log_level, :string, default: 'debug'
       }
     end
