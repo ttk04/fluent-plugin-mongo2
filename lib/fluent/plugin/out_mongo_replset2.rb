@@ -7,8 +7,11 @@ module Fluent
     config_set_default :include_tag_key, false
     config_set_default :include_time_key, true
 
+    desc "Replica set name"
     config_param :replica_set, :string
+    desc "Read from specified role"
     config_param :read, :string, :default => nil
+    desc "Retry number"
     config_param :num_retries, :integer, :default => 60
 
     def configure(conf)
