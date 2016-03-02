@@ -8,22 +8,32 @@ module Fluent
     require 'fluent/plugin/logger_support'
     include LoggerSupport
 
+    desc "MongoDB database"
     config_param :database, :string, default: nil
+    desc "MongoDB collection"
     config_param :collection, :string
+    desc "MongoDB host"
     config_param :host, :string, default: 'localhost'
+    desc "MongoDB port"
     config_param :port, :integer, default: 27017
+    desc "Tailing interval"
     config_param :wait_time, :integer, default: 1
+    desc "MongoDB node URL"
     config_param :url, :string, default: nil
 
+    desc "Input tag"
     config_param :tag, :string, default: nil
+    desc "Treat key as tag"
     config_param :tag_key, :string, default: nil
+    desc "Treat key as time"
     config_param :time_key, :string, default: nil
+    desc "Time format"
     config_param :time_format, :string, default: nil
 
-    # To store last ObjectID
+    desc "To store last ObjectID"
     config_param :id_store_file, :string, default: nil
 
-    # SSL connection
+    desc "SSL connection"
     config_param :ssl, :bool, default: false
 
     def initialize
