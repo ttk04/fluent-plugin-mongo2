@@ -66,8 +66,8 @@ module Fluent
         @remove_tag_prefix = Regexp.new('^' + Regexp.escape(remove_tag_prefix))
       end
 
-      @client_options[:w] = @write_concern unless @write_concern.nil?
       @client_options[:write] = {j: @journaled}
+      @client_options[:write].merge!({w: @write_concern}) unless @write_concern.nil?
       @client_options[:ssl] = @ssl
 
       if @ssl

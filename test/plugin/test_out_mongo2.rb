@@ -99,10 +99,10 @@ class Mongo2OutputTest < ::Test::Unit::TestCase
     ])
 
     expected = {
-      w: 2,
       ssl: false,
       write: {
         j: false,
+        w: 2,
       },
     }
     assert_equal(expected, d.instance.client_options)
