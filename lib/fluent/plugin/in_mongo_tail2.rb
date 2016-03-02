@@ -94,11 +94,9 @@ module Fluent
             return if @stop
 
             option['_id'] = {'$gt' => BSON::ObjectId(@last_id)} if @last_id
-            cursor = @collection.find(option)
-            if cursor.count >= 1
-              cursor.each {|doc|
-                process_document(doc)
-              }
+            documents = @collection.find(option)
+            if documents.count >= 1
+              process_documents(documents)
             else
               sleep @wait_time
             end
@@ -133,27 +131,29 @@ module Fluent
       end
     end
 
-    def process_document(doc)
-      time = if @time_key
-               t = doc.delete(@time_key)
-               t.nil? ? Engine.now : t.to_i
-             else
-               Engine.now
-             end
-      tag = if @tag_key
-              t = doc.delete(@tag_key)
-              t.nil? ? 'mongo.missing_tag' : t
-            else
-              @tag
-            end
-      if id = doc.delete('_id')
-        @last_id = id.to_s
-        doc['_id_str'] = @last_id
-        save_last_id if @id_store_file
-      end
-
-      # Should use MultiEventStream?
-      router.emit(tag, time, doc)
+    def process_documents(documents)
+      es = MultiEventStream.new
+      documents.each {|doc|
+        time = if @time_key
+                 t = doc.delete(@time_key)
+                 t.nil? ? Engine.now : t.to_i
+               else
+                 Engine.now
+               end
+        tag = if @tag_key
+                t = doc.delete(@tag_key)
+                t.nil? ? 'mongo.missing_tag' : t
+              else
+                @tag
+              end
+        if id = doc.delete('_id')
+          @last_id = id.to_s
+          doc['_id_str'] = @last_id
+          save_last_id if @id_store_file
+        end
+        es.add(time, doc)
+      }
+      router.emit_stream(tag, es)
     end
 
     def get_id_store_file
