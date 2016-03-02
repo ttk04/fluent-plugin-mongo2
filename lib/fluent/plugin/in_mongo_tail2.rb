@@ -71,6 +71,9 @@ module Fluent
 
       @file = get_id_store_file if @id_store_file
       @collection = get_collection
+      # Resume tailing from last inserted id.
+      # Because tailable option is obsoleted since mongo driver 2.0.
+      @last_id = get_last_inserted_id if !@id_store_file and get_last_inserted_id
       @thread = Thread.new(&method(:run))
     end
 
@@ -155,6 +158,19 @@ module Fluent
         es.add(time, doc)
       }
       router.emit_stream(tag, es)
+    end
+
+    def get_last_inserted_id
+      last_inserted_id = nil
+      documents = @collection.find()
+      if documents.count >= 1
+        documents.each {|doc|
+          if id = doc.delete('_id')
+            last_inserted_id = id
+          end
+        }
+      end
+      last_inserted_id
     end
 
     def get_id_store_file
