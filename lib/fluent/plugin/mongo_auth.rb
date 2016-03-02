@@ -2,7 +2,9 @@ module Fluent
   module MongoAuthParams
     def self.included(klass)
       klass.instance_eval {
+        desc "MongoDB user"
         config_param :user, :string, default: nil
+        desc "MongoDB password"
         config_param :password, :string, default: nil, secret: true
       }
     end
