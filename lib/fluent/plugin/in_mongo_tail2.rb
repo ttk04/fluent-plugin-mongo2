@@ -69,6 +69,7 @@ module Fluent
     def start
       super
 
+      @file = get_id_store_file if @id_store_file
       @collection = get_collection
       @thread = Thread.new(&method(:run))
     end
